@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Music Terminal - Authentication Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-primary: #58a6ff;
+            --accent-secondary: #1f6feb;
+            --border-color: #30363d;
+            --success-color: #3fb950;
+            --warning-color: #d29922;
+            --error-color: #f85149;
+            --disclaimer-color: #da3633;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Fira Code', monospace;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            position: relative;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2::before {
+            content: "> ";
+            color: var(--accent-secondary);
+            margin-right: 8px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .info-box {
+            background-color: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .privacy-box {
+            background-color: rgba(31, 111, 235, 0.1);
+            border: 1px solid var(--accent-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .disclaimer-box {
+            background-color: rgba(218, 54, 51, 0.1);
+            border: 2px solid var(--disclaimer-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(218, 54, 51, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 12px rgba(218, 54, 51, 0.2); }
+            50% { box-shadow: 0 4px 20px rgba(218, 54, 51, 0.4); }
+            100% { box-shadow: 0 4px 12px rgba(218, 54, 51, 0.2); }
+        }
+        
+        .disclaimer-box h3 {
+            color: var(--disclaimer-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .disclaimer-box h3::before {
+            content: "⚠ ";
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .steps {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 20px 0;
+        }
+        
+        .steps li {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+        
+        .steps li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+        
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: 'Fira Code', monospace;
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(31, 111, 235, 0.4);
+        }
+        
+        .button:hover::before {
+            left: 100%;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .alternatives {
+            background-color: var(--bg-tertiary);
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 40px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background-color: var(--bg-tertiary);
+        }
+        
+        .github-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .github-links a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            background-color: var(--bg-secondary);
+        }
+        
+        .github-links a:hover {
+            background-color: var(--accent-secondary);
+            color: white;
+            border-color: var(--accent-secondary);
+        }
+        
+        .code-block {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Fira Code', monospace;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        
+        .highlight {
+            color: var(--accent-primary);
+            font-weight: 500;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 8px;
+            }
+            
+            header {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .github-links {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .github-links a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ytm-term</h1>
+            <p class="subtitle">Authentication Service</p>
+        </header>
+        
+        <div class="content">
+            <div class="disclaimer-box">
+                <h3>Privacy Notice</h3>
+                <p><strong>We do not store any user details, credentials, or tokens.</strong> This service only facilitates the OAuth flow and immediately displays your token, which you need to pass to ytm-term. No personal data is retained on our servers.</p>
+            </div>
+            
+            <div class="section">
+                <h2>About This Service</h2>
+                <p>This website is part of the open-source project <span class="highlight">ytm-term</span>, a terminal-based YouTube Music player.</p>
+                
+                <div class="info-box">
+                    <p>This service securely obtains an access token after you log in with Google. The ytm-term application uses this token to access your YouTube Music playlists.</p>
+                </div>
+                
+                <p>This step is <span class="highlight">optional</span> and only required if you want to play your private playlists in the terminal application.</p>
+            </div>
+            
+            <div class="section">
+                <h2>How It Works</h2>
+                <ul class="steps">
+                    <li>Click the "Authenticate with Google" button below</li>
+                    <li>Log in to your Google account and grant the necessary permissions</li>
+                    <li>You will receive an access token</li>
+                    <li>ytm-term uses this token to access your YouTube Music data</li>
+                </ul>
+                
+                <div class="button-container">
+                    <a href="/google-login">
+                    <button class="button" id="authButton">Authenticate with Google</button></a>
+                </div>
+                
+                <div class="code-block">
+                    # After authentication, use the token in ytm-term:<br>
+                    $ ytm-term --token &lt;your_token_here&gt;
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Privacy & Security</h2>
+                <div class="privacy-box">
+                    <p>This is an open-source project. We host this service to protect our OAuth credentials from being misused.</p>
+                    <p>You can verify our source code and privacy practices:</p>
+                    <ul class="steps">
+                        <li><span class="highlight">ytm-term</span>: github.com/nonesubham/ytm-term</li>
+                        <li>This auth service: github.com/nonesubham/ytm-auth</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="alternatives">
+                <h2>Alternative Options</h2>
+                <p>If you prefer not to use this hosted service:</p>
+                <ul class="steps">
+                    <li><span class="highlight">Self-host</span>: Clone and host your own version (instructions in documentation)</li>
+                    <li><span class="highlight">Manual setup</span>: Set up your own OAuth 2.0 credentials, download the JSON file, and pass it to ytm-term</li>
+                </ul>
+                
+                <div class="code-block">
+                    # Manual OAuth setup example:<br>
+                    $ ytm-term --oauth-file /path/to/your/credentials.json
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>This service is part of the ytm-term open-source project</p>
+            <div class="github-links">
+                <a href="https://github.com/nonesubham/ytm-term" target="_blank">ytm-term GitHub</a>
+                <a href="https://github.com/nonesubham/ytm-auth" target="_blank">ytm-auth GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+</body>
+</html>
